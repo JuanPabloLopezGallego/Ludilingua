@@ -10,10 +10,41 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
 
 P = "thumbs"
 PREGUNTAS = [
-    {"espanol": "vaca",  "ingles": "cow",   "correcta": True},
-    {"espanol": "perro", "ingles": "cat",   "correcta": False},
-    {"espanol": "sol",   "ingles": "sun",   "correcta": True},
+    {"espanol": "vaca", "ingles": "cow", "correcta": True},
+    {"espanol": "perro", "ingles": "cat", "correcta": False},
+    {"espanol": "sol", "ingles": "sun", "correcta": True},
     {"espanol": "libro", "ingles": "table", "correcta": False},
+    {"espanol": "gato", "ingles": "cat", "correcta": True},
+    {"espanol": "casa", "ingles": "house", "correcta": True},
+    {"espanol": "coche", "ingles": "car", "correcta": True},
+    {"espanol": "árbol", "ingles": "dog", "correcta": False},
+    {"espanol": "luna", "ingles": "moon", "correcta": True},
+    {"espanol": "estrella", "ingles": "star", "correcta": True},
+    {"espanol": "mesa", "ingles": "chair", "correcta": False},
+    {"espanol": "silla", "ingles": "chair", "correcta": True},
+    {"espanol": "agua", "ingles": "fire", "correcta": False},
+    {"espanol": "fuego", "ingles": "water", "correcta": False},
+    {"espanol": "tierra", "ingles": "earth", "correcta": True},
+    {"espanol": "viento", "ingles": "wind", "correcta": True},
+    {"espanol": "manzana", "ingles": "apple", "correcta": True},
+    {"espanol": "plátano", "ingles": "banana", "correcta": True},
+    {"espanol": "naranja", "ingles": "orange", "correcta": True},
+    {"espanol": "uva", "ingles": "grape", "correcta": True},
+    {"espanol": "elefante", "ingles": "elephant", "correcta": True},
+    {"espanol": "león", "ingles": "lion", "correcta": True},
+    {"espanol": "tigre", "ingles": "tiger", "correcta": True},
+    {"espanol": "mono", "ingles": "monkey", "correcta": True},
+    {"espanol": "jirafa", "ingles": "zebra", "correcta": False},
+    {"espanol": "computadora", "ingles": "computer", "correcta": True},
+    {"espanol": "teléfono", "ingles": "phone", "correcta": True},
+    {"espanol": "música", "ingles": "music", "correcta": True},
+    {"espanol": "guitarra", "ingles": "piano", "correcta": False},
+    {"espanol": "piano", "ingles": "piano", "correcta": True},
+    {"espanol": "escuela", "ingles": "school", "correcta": True},
+    {"espanol": "maestro", "ingles": "student", "correcta": False},
+    {"espanol": "estudiante", "ingles": "student", "correcta": True},
+    {"espanol": "médico", "ingles": "doctor", "correcta": True},
+    {"espanol": "enfermera", "ingles": "nurse", "correcta": True}
 ]
 
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
@@ -33,7 +64,6 @@ st.title("👍 Pulgar Arriba / Abajo")
 
 @st.cache_resource(show_spinner="Cargando modelo IA...")
 def cargar_modelo():
-    # Rutas corregidas (sin 'assets/')
     model_path = "thumbs_up.h5"
     labels_path = "labels.txt"
     
@@ -82,7 +112,8 @@ intento = st.session_state[f"{P}_intento"]
 respondido = st.session_state[f"{P}_respondido"]
 
 st.markdown("<div class='emoji-header'>👍 / 👎</div>", unsafe_allow_html=True)
-st.markdown(f"### ¿La traducción de **{preg['espanol']}** es **{preg['ingles']}**?")
+# --- FRASE CAMBIADA AQUÍ ---
+st.markdown(f"### ¿La traducción en inglés de **{preg['espanol']}** es **{preg['ingles']}**?")
 st.markdown("Muestra **pulgar arriba 👍** si es correcto, o **pulgar abajo 👎** si es incorrecto.")
 st.info("💡 Puedes presionar el botón físico de Wokwi en cualquier momento para saltar.")
 mostrar_puntaje()
@@ -105,7 +136,6 @@ if img_file is not None:
 
         c = clase.lower()
         
-        # Lógica adaptada a tus etiquetas: "0 Correcto", "1 Incorrecto", "2 Nada"
         if "incorrecto" in c or "down" in c or c.startswith("1"):
             gesto = False
         elif "correcto" in c or "up" in c or c.startswith("0"):
