@@ -15,7 +15,7 @@ TOPIC_FEEDBACK = "ludilingua_pro_2026/feedback"
 #  🎨 HELPERS DE DISEÑO (CSS puro, sin Lottie)
 # =====================================================================
 def inject_global_css():
-    """Tipografía, botones, alertas y animaciones comunes a todas las páginas."""
+    """Tipografía, botones, alertas, inputs y audio corregidos."""
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;600;700;800&display=swap');
@@ -79,7 +79,7 @@ def inject_global_css():
             display: inline-flex;
             align-items: center;
             gap: 0.7rem;
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(10px);
             padding: 0.7rem 1.4rem;
             border-radius: 30px;
@@ -97,7 +97,30 @@ def inject_global_css():
             50%      { transform: translateY(-5px); }
         }
 
-        /* ---------- Inputs ---------- */
+        /* =================================================================
+           🔧 LABELS de widgets (text_input, camera_input, etc.)
+           FIX: en dark mode Streamlit los pinta blancos → invisibles.
+           Forzamos un color oscuro con halo blanco → legible en cualquier fondo.
+           ================================================================= */
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stWidgetLabel"] label,
+        .stTextInput > label,
+        .stTextInput label p,
+        .stTextInput label,
+        .stCameraInput > label,
+        .stCameraInput label p,
+        .stCameraInput label {
+            color: #1a1a2e !important;
+            text-shadow:
+                0 0 4px rgba(255,255,255,0.95),
+                0 0 8px rgba(255,255,255,0.75),
+                1px 1px 3px rgba(255,255,255,0.95) !important;
+            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+            opacity: 1 !important;
+        }
+
+        /* ---------- Input ---------- */
         .stTextInput > div > div > input {
             border-radius: 20px !important;
             border: 3px solid #fff !important;
@@ -105,14 +128,49 @@ def inject_global_css():
             font-size: 1.2rem !important;
             font-family: 'Fredoka', sans-serif !important;
             box-shadow: 0 4px 14px rgba(0,0,0,0.12) !important;
+            color: #1a1a2e !important;
+            background: #ffffff !important;
+        }
+        .stTextInput > div > div > input::placeholder {
+            color: #9aa0b4 !important;
         }
         .stTextInput > div > div > input:focus {
             border-color: #ffd166 !important;
             box-shadow: 0 0 0 4px rgba(255,209,102,0.35) !important;
         }
 
-        /* ---------- Cámara y audio con marco bonito ---------- */
-        [data-testid="stCameraInput"], [data-testid="stAudio"] {
+        /* =================================================================
+           🔧 REPRODUCTOR DE AUDIO
+           FIX: en dark mode los iconos y la barra son blancos → invisibles
+           sobre el marco blanco. Forzamos color-scheme light + fondo claro
+           para que los controles nativos se rendericen con iconos oscuros.
+           ================================================================= */
+        [data-testid="stAudio"] {
+            background: #ffffff !important;
+            border: 5px solid #ffffff;
+            border-radius: 26px;
+            padding: 0.8rem;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+            margin: 1rem 0;
+        }
+        [data-testid="stAudio"] audio {
+            width: 100%;
+            color-scheme: light !important;
+            background: #f8f9fa !important;
+            border-radius: 16px;
+        }
+        [data-testid="stAudio"] audio::-webkit-media-controls-panel {
+            background: #f8f9fa !important;
+        }
+        [data-testid="stAudio"] audio::-webkit-media-controls-play-button,
+        [data-testid="stAudio"] audio::-webkit-media-controls-current-time-display,
+        [data-testid="stAudio"] audio::-webkit-media-controls-time-remaining-display {
+            color: #1a1a2e !important;
+            filter: none !important;
+        }
+
+        /* ---------- Cámara con marco bonito ---------- */
+        [data-testid="stCameraInput"] {
             border: 5px solid #fff;
             border-radius: 26px;
             padding: 0.8rem;
@@ -123,7 +181,7 @@ def inject_global_css():
 
         /* ---------- Responsive ---------- */
         @media (max-width: 768px) {
-            .float-emoji { font-size: 2rem !important; opacity: 0.22 !important; }
+            .float-emoji { font-size: 2rem !important; opacity: 0.28 !important; }
             .stButton > button { font-size: 1rem !important; padding: 0.8rem 1.5rem !important; }
         }
     </style>
@@ -149,37 +207,46 @@ def animated_bg(c1, c2, c3, speed=15):
 
 
 def floating_emojis(emojis):
-    """Emojis decorativos flotando en el fondo."""
-    spans = "".join(
-        f'<span class="float-emoji" style="animation-delay:{i*0.7}s;">{e}</span>'
-        for i, e in enumerate(emojis)
-    )
+    """
+    Emojis decorativos en el fondo, con animación CSS.
+    🔧 FIX: la animación dura 1s (= intervalo de st_autorefresh) y
+    regresa a la misma posición inicial, así no se nota el reinicio
+    cuando Streamlit vuelve a renderizar el markdown.
+    """
+    spans = "".join(f'<span class="float-emoji">{e}</span>' for e in emojis)
     st.markdown(f"""
-    <div class="emoji-cloud">{spans}</div>
     <style>
         .emoji-cloud {{
-            position: fixed; inset: 0;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
             pointer-events: none;
-            overflow: hidden;
             z-index: 0;
+            overflow: hidden;
         }}
         .float-emoji {{
             position: absolute;
             font-size: 3rem;
-            opacity: 0.35;
-            animation: floatUpDown 6s ease-in-out infinite;
+            opacity: 0.4;
+            /* Animación de 1s → coincide con el ciclo de st_autorefresh(1000ms).
+               Los keyframes vuelven al mismo punto → reinicio invisible. */
+            animation: emojiBounce 1s ease-in-out infinite;
+            will-change: transform;
         }}
         .float-emoji:nth-child(1) {{ top: 8%;  left: 4%; }}
-        .float-emoji:nth-child(2) {{ top: 18%; right: 7%;  animation-duration: 7s; }}
-        .float-emoji:nth-child(3) {{ bottom: 14%; left: 10%; animation-duration: 5.5s; }}
-        .float-emoji:nth-child(4) {{ bottom: 22%; right: 12%; animation-duration: 6.5s; }}
-        .float-emoji:nth-child(5) {{ top: 48%; left: 3%; animation-duration: 8s; }}
-        .float-emoji:nth-child(6) {{ top: 62%; right: 4%; animation-duration: 7.5s; }}
-        @keyframes floatUpDown {{
-            0%, 100% {{ transform: translateY(0) rotate(0deg); }}
-            50%      {{ transform: translateY(-30px) rotate(15deg); }}
+        .float-emoji:nth-child(2) {{ top: 18%; right: 7%; }}
+        .float-emoji:nth-child(3) {{ bottom: 14%; left: 10%; }}
+        .float-emoji:nth-child(4) {{ bottom: 22%; right: 12%; }}
+        .float-emoji:nth-child(5) {{ top: 48%; left: 3%; }}
+        .float-emoji:nth-child(6) {{ top: 62%; right: 4%; }}
+        @keyframes emojiBounce {{
+            0%, 100% {{ transform: translateY(0) rotate(0deg) scale(1); }}
+            50%      {{ transform: translateY(-18px) rotate(8deg) scale(1.15); }}
         }}
     </style>
+    <div class="emoji-cloud">{spans}</div>
     """, unsafe_allow_html=True)
 
 
