@@ -3,7 +3,7 @@ from utils import (inicializar_sesion, mostrar_puntaje,
                    inject_global_css, animated_bg, floating_emojis)
 
 st.set_page_config(
-    page_title="English Play & Learn 🎮",
+    page_title="Ludilingua 🎮",  # <-- Título de la pestaña del navegador
     page_icon="🌈",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -96,8 +96,8 @@ st.markdown("""
 
 # ---------- HERO ----------
 st.markdown('<div class="hero-badge">🌍✨🎓</div>', unsafe_allow_html=True)
-st.markdown('<h1 class="hero-title">English Play & Learn</h1>', unsafe_allow_html=True)
-# 🔧 CAMBIO: quitamos "con Wokwi" del subtítulo
+# Título principal cambiado a Ludilingua
+st.markdown('<h1 class="hero-title">Ludilingua</h1>', unsafe_allow_html=True)
 st.markdown('<p class="hero-sub">🌈 ¡Aprende inglés jugando! 🎮</p>', unsafe_allow_html=True)
 
 mostrar_puntaje()
