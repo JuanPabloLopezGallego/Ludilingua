@@ -1,7 +1,7 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
-import os  # <-- NUEVO: Para verificar rutas
+import os
 from PIL import Image, ImageOps
 from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
@@ -31,26 +31,23 @@ st.markdown("""
 
 st.title("👍 Pulgar Arriba / Abajo")
 
-# --- FUNCIÓN DE CARGA MEJORADA ---
 @st.cache_resource(show_spinner="Cargando modelo IA...")
 def cargar_modelo():
-    model_path = "assets/thumbs_up.h5"
-    labels_path = "assets/labels.txt"
+    # Rutas corregidas (sin 'assets/')
+    model_path = "thumbs_up.h5"
+    labels_path = "labels.txt"
     
-    # Verificamos si los archivos existen antes de intentar cargarlos
     if not os.path.exists(model_path):
         return None, f"❌ No se encuentra el archivo: {model_path}"
     if not os.path.exists(labels_path):
         return None, f"❌ No se encuentra el archivo: {labels_path}"
 
     try:
-        # compile=False evita errores si el modelo se entrenó con otra versión
         model = tf.keras.models.load_model(model_path, compile=False)
         with open(labels_path, "r") as f:
             labels = [line.strip() for line in f.readlines() if line.strip()]
         return model, labels
     except Exception as e:
-        # Si falla, te mostramos el error real de TensorFlow
         return None, f"❌ Error al cargar Keras: {str(e)}"
 
 def preprocesar_imagen(img: Image.Image) -> np.ndarray:
@@ -62,6 +59,7 @@ def preprocesar_imagen(img: Image.Image) -> np.ndarray:
     data[0] = normalized
     return data
 
+# Botón físico -> siguiente pregunta
 if hubo_avance_boton(P):
     reiniciar_ronda(P, PREGUNTAS)
     st.toast("🔘 Botón de Wokwi: siguiente pregunta")
@@ -72,12 +70,11 @@ if f"{P}_actual" not in st.session_state:
 
 model, error_o_labels = cargar_modelo()
 
-# Si el modelo falló, mostramos el error real y detenemos la app
 if model is None:
     st.error(error_o_labels)
     st.stop()
 
-labels = error_o_labels  # Si llegamos aquí, la carga fue exitosa y son las labels
+labels = error_o_labels
 
 preg = st.session_state[f"{P}_actual"]
 ronda = st.session_state[f"{P}_ronda"]
@@ -108,15 +105,13 @@ if img_file is not None:
 
         c = clase.lower()
         
-        # --- LÓGICA CORREGIDA SEGÚN TUS LABELS ---
-        # Primero verificamos "incorrecto" porque contiene la palabra "correcto"
-        if "incorrecto" in c or "down" in c or "1" in c:
+        # Lógica adaptada a tus etiquetas: "0 Correcto", "1 Incorrecto", "2 Nada"
+        if "incorrecto" in c or "down" in c or c.startswith("1"):
             gesto = False
-        elif "correcto" in c or "up" in c or "0" in c:
+        elif "correcto" in c or "up" in c or c.startswith("0"):
             gesto = True
         else: 
-            # "Nada" o "2"
-            gesto = None
+            gesto = None # Para "2 Nada"
 
         if gesto is None:
             resultado = {
