@@ -1,8 +1,6 @@
 import random
 import threading
 import uuid
-import base64
-from io import BytesIO
 
 import paho.mqtt.client as mqtt
 import streamlit as st
@@ -135,6 +133,22 @@ def inject_global_css():
             box-shadow: 0 0 0 4px rgba(255,209,102,0.35) !important;
         }
 
+        /* ---------- Reproductor de audio nativo corregido ---------- */
+        [data-testid="stAudio"] {
+            background: #ffffff !important;
+            border-radius: 20px !important;
+            padding: 10px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+            border: 3px solid #fff !important;
+            margin: 1rem auto !important;
+            max-width: 500px !important;
+        }
+        [data-testid="stAudio"] audio {
+            width: 100%;
+            color-scheme: light !important; /* Fuerza modo claro para que los iconos se vean oscuros */
+            border-radius: 10px;
+        }
+
         /* ---------- Cámara ---------- */
         [data-testid="stCameraInput"] {
             border: 5px solid #fff;
@@ -151,20 +165,6 @@ def inject_global_css():
             .stButton > button { font-size: 1rem !important; padding: 0.8rem 1.5rem !important; }
         }
     </style>
-    """, unsafe_allow_html=True)
-
-
-def custom_audio_player(audio_bytes):
-    """Reproductor de audio HTML5 personalizado (evita el bug visual de Streamlit)."""
-    b64 = base64.b64encode(audio_bytes).decode()
-    st.markdown(f"""
-    <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
-        <div style="background: white; padding: 8px 16px; border-radius: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; width: 100%; max-width: 450px; border: 3px solid #fff;">
-            <audio controls style="width: 100%; outline: none; border-radius: 20px;">
-                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-            </audio>
-        </div>
-    </div>
     """, unsafe_allow_html=True)
 
 
