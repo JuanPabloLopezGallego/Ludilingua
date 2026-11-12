@@ -58,71 +58,47 @@ inicializar_sesion()
 st.markdown("""
 <style>
     .thumbs-title {
-        text-align: center;
-        font-family: 'Baloo 2', sans-serif;
-        font-weight: 800;
-        font-size: clamp(1.8rem, 4.5vw, 3.2rem);
-        color: #fff;
+        text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 800;
+        font-size: clamp(1.8rem, 4.5vw, 3.2rem); color: #fff;
         text-shadow: 3px 3px 0 #d97706, 6px 6px 22px rgba(0,0,0,0.35);
-        margin: 0.3rem 0 0.2rem;
-        animation: titlePop 2s ease-in-out infinite;
+        margin: 0.3rem 0 0.2rem; animation: titlePop 2s ease-in-out infinite;
     }
-    @keyframes titlePop {
-        0%, 100% { transform: scale(1); }
-        50%      { transform: scale(1.04); }
-    }
+    @keyframes titlePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+    
     .thumbs-badge {
-        text-align: center;
-        font-size: 5.5rem;
-        animation: thumbsShake 1.6s ease-in-out infinite;
-        filter: drop-shadow(0 0 22px rgba(255,209,102,0.9));
-        margin: 0.4rem 0;
+        text-align: center; font-size: 5.5rem; animation: thumbsShake 1.6s ease-in-out infinite;
+        filter: drop-shadow(0 0 22px rgba(255,209,102,0.9)); margin: 0.4rem 0;
     }
-    @keyframes thumbsShake {
-        0%, 100% { transform: rotate(-8deg); }
-        50%      { transform: rotate(8deg); }
-    }
+    @keyframes thumbsShake { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+    
     .question-card {
-        background: rgba(255,255,255,0.9);
-        backdrop-filter: blur(12px);
-        border-radius: 32px;
-        padding: 2rem 1.5rem;
-        text-align: center;
-        margin: 1rem auto;
-        max-width: 95%;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.18);
-        border: 5px solid #fff;
+        background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+        border-radius: 32px; padding: 2rem 1.5rem; text-align: center;
+        margin: 1rem auto; max-width: 95%;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.18); border: 5px solid #fff;
         animation: questionBounce 3s ease-in-out infinite;
     }
-    @keyframes questionBounce {
-        0%, 100% { transform: translateY(0); }
-        50%      { transform: translateY(-6px); }
-    }
+    @keyframes questionBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    
     .question-card h2 {
-        font-family: 'Baloo 2', sans-serif;
-        font-weight: 800;
-        font-size: clamp(1.2rem, 3.5vw, 2rem);
-        color: #4a1c40;
-        margin: 0;
-        line-height: 1.3;
+        font-family: 'Baloo 2', sans-serif; font-weight: 800;
+        font-size: clamp(1.2rem, 3.5vw, 2rem); color: #4a1c40;
+        margin: 0; line-height: 1.3;
     }
     .question-card .big-word {
-        color: #ff4d94;
-        background: linear-gradient(90deg,#ff4d94,#ffb84d,#ff4d94);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #ff4d94; background: linear-gradient(90deg,#ff4d94,#ffb84d,#ff4d94);
+        background-size: 200% auto; -webkit-background-clip: text;
+        background-clip: text; -webkit-text-fill-color: transparent;
         animation: wordShift 3s linear infinite;
     }
-    @keyframes wordShift {
-        0%   { background-position: 0% 50%; }
-        100% { background-position: 200% 50%; }
-    }
+    @keyframes wordShift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+    /* 🔧 FIX: Sol centrado en la pantalla, no en la esquina */
     .sun-rays {
         position: fixed;
-        inset: -30% -30% auto auto;
-        width: 60vmax; height: 60vmax;
+        top: 50%; left: 50%;
+        width: 150vmax; height: 150vmax;
+        margin-top: -75vmax; margin-left: -75vmax;
         pointer-events: none;
         background: repeating-conic-gradient(
             from 0deg,
@@ -133,10 +109,7 @@ st.markdown("""
         animation: sunSpin 60s linear infinite;
         z-index: 0;
     }
-    @keyframes sunSpin {
-        0%   { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+    @keyframes sunSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -146,7 +119,6 @@ st.markdown('<div class="sun-rays"></div>', unsafe_allow_html=True)
 st.markdown('<h1 class="thumbs-title">👍 ¿Correcto o Incorrecto? 👎</h1>', unsafe_allow_html=True)
 st.markdown('<div class="thumbs-badge">👍 / 👎</div>', unsafe_allow_html=True)
 
-# ---------- MODELO ----------
 @st.cache_resource(show_spinner="Cargando modelo IA...")
 def cargar_modelo():
     model_path = "thumbs_up.h5"
@@ -191,7 +163,6 @@ ronda = st.session_state[f"{P}_ronda"]
 intento = st.session_state[f"{P}_intento"]
 respondido = st.session_state[f"{P}_respondido"]
 
-# ---------- PREGUNTA ----------
 st.markdown(f"""
 <div class="question-card">
     <h2>¿La traducción al inglés de <br>
@@ -201,7 +172,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.markdown(
-    "<p style='text-align:center;color:#4a1c40;font-weight:600;font-size:1.05rem;'>"
+    "<p style='text-align:center;color:#1a1a2e;font-weight:700;font-size:1.05rem;text-shadow:1px 1px 3px #fff;'>"
     "Muestra 👍 si es <b>correcto</b>, 👎 si es <b>incorrecto</b></p>",
     unsafe_allow_html=True,
 )
@@ -212,7 +183,6 @@ img_file = st.camera_input(
     key=f"{P}_cam_{ronda}_{intento}",
 )
 
-# ---------- EVALUACIÓN ----------
 if img_file is not None:
     image = Image.open(img_file).convert("RGB")
     st.image(image, caption="Tu captura", use_container_width=True)
