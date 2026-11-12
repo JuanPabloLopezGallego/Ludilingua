@@ -1,8 +1,66 @@
 import streamlit as st
-import numpy as np
-from io import BytesIO
-import wave
+import paho.mqtt.client as mqtt
+import threading
+import queue
+import json
+import time
 
+# --- Configuración MQTT ---
+BROKER = "broker.emqx.io"
+PORT = 1883
+TOPIC_BOTON = "ludilingua/boton"
+TOPIC_FEEDBACK = "ludilingua/feedback"
+
+# Cola global para recibir mensajes del hilo de MQTT
+if "mqtt_queue" not in st.session_state:
+    st.session_state.mqtt_queue = queue.Queue()
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Conectado al broker MQTT")
+        client.subscribe(TOPIC_BOTON)
+    else:
+        print(f"Error de conexión MQTT, código: {rc}")
+
+def on_message(client, userdata, msg):
+    payload = msg.payload.decode()
+    print(f"Mensaje MQTT recibido en {msg.topic}: {payload}")
+    # Enviamos el mensaje a la cola para que Streamlit lo procese
+    st.session_state.mqtt_queue.put((msg.topic, payload))
+
+@st.cache_resource
+def get_mqtt_client():
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect(BROKER, PORT, 60)
+    # Iniciamos el loop en un hilo separado
+    thread = threading.Thread(target=client.loop_forever, daemon=True)
+    thread.start()
+    return client
+
+# Inicializamos el cliente al cargar el módulo
+mqtt_client = get_mqtt_client()
+
+def publicar_feedback(acierto: bool):
+    """Publica en el broker para que Wokwi encienda el LED y suene el buzzer."""
+    mensaje = "CORRECTO" if acierto else "INCORRECTO"
+    mqtt_client.publish(TOPIC_FEEDBACK, mensaje)
+
+def obtener_ultimo_mensaje_boton():
+    """Revisa si hay mensajes nuevos del botón en la cola."""
+    try:
+        # Vacia la cola y devuelve el último mensaje si es del tópico del botón
+        ultimo = None
+        while not st.session_state.mqtt_queue.empty():
+            topic, payload = st.session_state.mqtt_queue.get_nowait()
+            if topic == TOPIC_BOTON:
+                ultimo = payload
+        return ultimo
+    except queue.Empty:
+        return None
+
+# --- Funciones de Puntaje (sin cambios) ---
 def inicializar_sesion():
     if "score" not in st.session_state:
         st.session_state.score = 0
@@ -24,24 +82,3 @@ def mostrar_puntaje():
         """,
         unsafe_allow_html=True,
     )
-
-def generar_sonido(frecuencia: int, duracion: float = 0.3) -> bytes:
-    sample_rate = 44100
-    t = np.linspace(0, duracion, int(sample_rate * duracion), endpoint=False)
-    onda = 0.5 * np.sin(2 * np.pi * frecuencia * t)
-    audio = (onda * 32767).astype(np.int16)
-    buffer = BytesIO()
-    with wave.open(buffer, 'wb') as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(sample_rate)
-        wf.writeframes(audio.tobytes())
-    return buffer.getvalue()
-
-def reproducir_feedback(acierto: bool):
-    if acierto:
-        st.audio(generar_sonido(1000), format="audio/wav")
-        st.markdown("<div style='text-align:center; font-size: 30px; animation: fadeIn 1s;'>🟢 <b>¡LED Verde encendido!</b></div>", unsafe_allow_html=True)
-    else:
-        st.audio(generar_sonido(300), format="audio/wav")
-        st.markdown("<div style='text-align:center; font-size: 30px; animation: fadeIn 1s;'>🔴 <b>¡LED Rojo encendido!</b></div>", unsafe_allow_html=True)
