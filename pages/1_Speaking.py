@@ -21,10 +21,9 @@ st.title("🎤 Práctica de Pronunciación")
 # --- Lógica para detectar el botón físico de Wokwi ---
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
-    # El botón fue presionado, cambiamos la palabra
     if "palabra_actual" in st.session_state:
         del st.session_state.palabra_actual
-    st.toast("🔘 Botón de Wokwi presionado. Siguiente palabra.")
+    st.toast("🔘 ¡Botón de Wokwi presionado! Siguiente palabra.")
 
 palabras = ["apple", "banana", "elephant", "computer", "beautiful", "language"]
 if "palabra_actual" not in st.session_state:
@@ -33,6 +32,7 @@ if "palabra_actual" not in st.session_state:
 palabra = st.session_state.palabra_actual
 st.markdown("### Pronuncia la siguiente palabra:")
 st.markdown(f"<div class='word-display'>{palabra}</div>", unsafe_allow_html=True)
+
 mostrar_puntaje()
 
 texto_reconocido = speech_to_text(language='en', start_prompt="🎙️ Grabar", stop_prompt="⏹️ Detener", just_once=True, use_container_width=True, key="speech")
@@ -42,12 +42,12 @@ if texto_reconocido:
     acierto = texto_reconocido.lower().strip() == palabra.lower()
     mensaje = actualizar_puntaje(acierto)
     
-    # --- Publicar en MQTT para activar hardware en Wokwi ---
+    # Publicar en MQTT para que Wokwi reaccione (LEDs y Buzzer)
     publicar_feedback(acierto)
     
     if acierto:
         st.success(mensaje)
-        if st.button("Siguiente palabra ➡️ (También puedes usar el botón físico)"):
+        if st.button("Siguiente palabra ➡️"):
             st.session_state.palabra_actual = random.choice(palabras)
             st.rerun()
     else:
