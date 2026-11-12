@@ -1,6 +1,7 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import os  # <-- NUEVO: Para verificar rutas
 from PIL import Image, ImageOps
 from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
@@ -16,7 +17,7 @@ PREGUNTAS = [
 ]
 
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
-st_autorefresh(interval=1000, key="refresh_thumbs")  # Corregido el error de sintaxis
+st_autorefresh(interval=1000, key="refresh_thumbs")
 inicializar_sesion()
 
 st.markdown("""
@@ -30,16 +31,27 @@ st.markdown("""
 
 st.title("👍 Pulgar Arriba / Abajo")
 
+# --- FUNCIÓN DE CARGA MEJORADA ---
 @st.cache_resource(show_spinner="Cargando modelo IA...")
 def cargar_modelo():
+    model_path = "assets/thumbs_up.h5"
+    labels_path = "assets/labels.txt"
+    
+    # Verificamos si los archivos existen antes de intentar cargarlos
+    if not os.path.exists(model_path):
+        return None, f"❌ No se encuentra el archivo: {model_path}"
+    if not os.path.exists(labels_path):
+        return None, f"❌ No se encuentra el archivo: {labels_path}"
+
     try:
-        model = tf.keras.models.load_model("assets/thumbs_up.h5", compile=False)
-        with open("assets/labels.txt", "r") as f:
+        # compile=False evita errores si el modelo se entrenó con otra versión
+        model = tf.keras.models.load_model(model_path, compile=False)
+        with open(labels_path, "r") as f:
             labels = [line.strip() for line in f.readlines() if line.strip()]
         return model, labels
     except Exception as e:
-        print(f"Error modelo: {e}")
-        return None, None
+        # Si falla, te mostramos el error real de TensorFlow
+        return None, f"❌ Error al cargar Keras: {str(e)}"
 
 def preprocesar_imagen(img: Image.Image) -> np.ndarray:
     size = (224, 224)
@@ -50,20 +62,22 @@ def preprocesar_imagen(img: Image.Image) -> np.ndarray:
     data[0] = normalized
     return data
 
-# Botón físico -> siguiente pregunta
 if hubo_avance_boton(P):
     reiniciar_ronda(P, PREGUNTAS)
     st.toast("🔘 Botón de Wokwi: siguiente pregunta")
     st.rerun()
 
-# Inicializar estado
 if f"{P}_actual" not in st.session_state:
     reiniciar_ronda(P, PREGUNTAS)
 
-model, labels = cargar_modelo()
+model, error_o_labels = cargar_modelo()
+
+# Si el modelo falló, mostramos el error real y detenemos la app
 if model is None:
-    st.error("Error al cargar el modelo. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en assets/.")
+    st.error(error_o_labels)
     st.stop()
+
+labels = error_o_labels  # Si llegamos aquí, la carga fue exitosa y son las labels
 
 preg = st.session_state[f"{P}_actual"]
 ronda = st.session_state[f"{P}_ronda"]
@@ -85,7 +99,6 @@ if img_file is not None:
     image = Image.open(img_file).convert("RGB")
     st.image(image, caption="Tu captura", use_container_width=True)
 
-    # Evaluar UNA sola vez por intento
     if not respondido:
         data = preprocesar_imagen(image)
         prediction = model.predict(data, verbose=0)
@@ -94,18 +107,21 @@ if img_file is not None:
         confianza = float(prediction[0][clase_idx])
 
         c = clase.lower()
-        # Ajusta esta lógica según cómo se llamen tus etiquetas en labels.txt
-        if "up" in c or "arriba" in c or "correct" in c or c == "0":
-            gesto = True
-        elif "down" in c or "abajo" in c or "incorrect" in c or c == "1":
+        
+        # --- LÓGICA CORREGIDA SEGÚN TUS LABELS ---
+        # Primero verificamos "incorrecto" porque contiene la palabra "correcto"
+        if "incorrecto" in c or "down" in c or "1" in c:
             gesto = False
-        else:
+        elif "correcto" in c or "up" in c or "0" in c:
+            gesto = True
+        else: 
+            # "Nada" o "2"
             gesto = None
 
         if gesto is None:
             resultado = {
                 "acierto": None,
-                "mensaje": f"No se reconoció el gesto ({clase} {confianza:.2f}). Intenta de nuevo.",
+                "mensaje": f"Se detectó '{clase}' ({confianza:.2f}). No se reconoció un pulgar claro. Intenta de nuevo.",
                 "clase": clase, 
                 "conf": confianza
             }
