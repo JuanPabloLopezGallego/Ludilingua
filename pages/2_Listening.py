@@ -3,8 +3,7 @@ from gtts import gTTS
 from io import BytesIO
 from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
-                   publicar_feedback, reiniciar_ronda, reintentar,
-                   hubo_avance_boton, normalizar)
+                   publicar_feedback, reiniciar_ronda, hubo_avance_boton, normalizar)
 
 P = "listening"
 PALABRAS = [
@@ -85,10 +84,6 @@ if respondido and resultado:
     else:
         st.error(resultado["mensaje"])
         st.write(f"La palabra correcta era: **{palabra}**")
-        if st.button("🔁 Intentar de nuevo"):
-            reintentar(P)
-            st.rerun()
-
-    if st.button("➡️ Siguiente palabra"):
-        reiniciar_ronda(P, PALABRAS)
-        st.rerun()
+    
+    # Aviso para usar el botón físico
+    st.info("💡 **Instrucción:** Presiona el botón físico en Wokwi para pasar a la siguiente palabra.")
