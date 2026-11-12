@@ -5,7 +5,7 @@ from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
                    publicar_feedback, reiniciar_ronda, hubo_avance_boton,
                    normalizar, inject_global_css, animated_bg, floating_emojis,
-                   kid_alert, wokwi_hint, custom_audio_player)
+                   kid_alert, wokwi_hint)
 
 P = "listening"
 PALABRAS = [
@@ -21,7 +21,9 @@ st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="ce
 inject_global_css()
 animated_bg("#4facfe", "#00f2fe", "#6be3ff", speed=14)
 floating_emojis(["🌊","🐠","🐟","🎧","🎵","💙"])
-st_autorefresh(interval=1000, key="refresh_listening")
+
+# 🔧 FIX: Aumentamos a 2500ms para que no corte el audio a la mitad
+st_autorefresh(interval=2500, key="refresh_listening")
 inicializar_sesion()
 
 st.markdown("""
@@ -33,18 +35,12 @@ st.markdown("""
         margin: 0.3rem 0 0.2rem; animation: titleBob 2.5s ease-in-out infinite;
     }
     @keyframes titleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-    
     .headphone-display {
-        text-align: center; font-size: 5.5rem;
-        animation: headBob 1.8s ease-in-out infinite;
+        text-align: center; font-size: 5.5rem; animation: headBob 1.8s ease-in-out infinite;
         filter: drop-shadow(0 0 22px rgba(79,172,254,0.9)); margin: 0.4rem 0;
     }
     @keyframes headBob { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
-
-    .waves-box {
-        display: flex; justify-content: center; align-items: flex-end;
-        gap: 6px; height: 70px; margin: 1rem 0;
-    }
+    .waves-box { display: flex; justify-content: center; align-items: flex-end; gap: 6px; height: 70px; margin: 1rem 0; }
     .wave-bar {
         width: 10px; background: linear-gradient(180deg, #00f2fe, #4facfe);
         border-radius: 6px; animation: waveUpDown 1s ease-in-out infinite;
@@ -93,8 +89,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 🔧 AQUÍ usamos el nuevo reproductor personalizado
-custom_audio_player(audio_palabra(palabra))
+# 🔧 FIX: Volvemos al reproductor nativo (ya corregido por CSS) para que no se rompa
+st.audio(audio_palabra(palabra), format="audio/mp3")
 
 mostrar_puntaje()
 
