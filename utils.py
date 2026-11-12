@@ -21,7 +21,7 @@ def inject_global_css():
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;600;700;800&display=swap');
 
         .stApp, .stApp * { font-family: 'Fredoka', sans-serif; }
-        .main .block-container { max-width: 1100px; padding-top: 1.5rem; }
+        .main .block-container { max-width: 1100px; padding-top: 1.5rem; position: relative; z-index: 1; }
 
         /* ---------- Botones grandes y divertidos ---------- */
         .stButton > button {
@@ -186,13 +186,27 @@ def animated_bg(c1, c2, c3, speed=15):
 
 
 def floating_emojis(emojis):
-    """Emojis flotantes repartidos por toda la pantalla de forma simétrica."""
-    spans = "".join(f'<span class="float-emoji">{e}</span>' for e in emojis)
+    """Emojis flotantes distribuidos matemáticamente por toda la pantalla."""
+    # Coordenadas exactas (top, left) para garantizar la distribución
+    posiciones = [
+        (10, 5), (15, 85), (80, 10), (75, 90),
+        (45, 5), (50, 90), (30, 25), (60, 75),
+        (20, 50), (80, 50), (40, 40), (70, 60)
+    ]
+    
+    spans = ""
+    for i, emoji in enumerate(emojis):
+        top, left = posiciones[i % len(posiciones)]
+        # Añadimos un pequeño retraso en la animación para que no se muevan al mismo tiempo
+        delay = (i * 0.3) % 2 
+        spans += f'<span class="float-emoji" style="top: {top}%; left: {left}%; animation-delay: {delay}s;">{emoji}</span>'
+
     st.markdown(f"""
     <style>
         .emoji-cloud {{
             position: fixed !important;
-            inset: 0 !important; /* 🔧 FIX: Ocupa exactamente el 100% visible, ignorando el scroll */
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
             pointer-events: none;
             z-index: 0;
             overflow: hidden;
@@ -201,20 +215,9 @@ def floating_emojis(emojis):
             position: absolute;
             font-size: 3.5rem;
             opacity: 0.35;
-            animation: emojiBounce 1.5s ease-in-out infinite;
+            animation: emojiBounce 2s ease-in-out infinite;
             will-change: transform;
         }}
-        /* Distribución simétrica en los laterales y esquinas */
-        .float-emoji:nth-child(1) {{ top: 8%;  left: 4%; }}
-        .float-emoji:nth-child(2) {{ top: 15%; right: 4%; }}
-        .float-emoji:nth-child(3) {{ bottom: 15%; left: 6%; }}
-        .float-emoji:nth-child(4) {{ bottom: 10%; right: 6%; }}
-        .float-emoji:nth-child(5) {{ top: 45%; left: 2%; }}
-        .float-emoji:nth-child(6) {{ top: 55%; right: 2%; }}
-        /* Si agregas más de 6 emojis, estos van al centro */
-        .float-emoji:nth-child(7) {{ top: 30%; left: 50%; transform: translateX(-50%); }}
-        .float-emoji:nth-child(8) {{ bottom: 35%; left: 50%; transform: translateX(-50%); }}
-        
         @keyframes emojiBounce {{
             0%, 100% {{ transform: translateY(0) rotate(0deg) scale(1); }}
             50%      {{ transform: translateY(-20px) rotate(10deg) scale(1.1); }}
