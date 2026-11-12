@@ -1,0 +1,3 @@
+0 Correcto
+1 Incorrecto
+2 Nada
