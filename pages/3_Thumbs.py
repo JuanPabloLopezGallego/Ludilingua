@@ -93,12 +93,14 @@ st.markdown("""
     }
     @keyframes wordShift { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-    /* 🔧 FIX: Sol centrado en la pantalla, no en la esquina */
+    /* 🔧 FIX: Sol centrado perfectamente usando transform */
     .sun-rays {
         position: fixed;
-        top: 50%; left: 50%;
-        width: 150vmax; height: 150vmax;
-        margin-top: -75vmax; margin-left: -75vmax;
+        top: 50%;
+        left: 50%;
+        width: 150vmax;
+        height: 150vmax;
+        transform: translate(-50%, -50%);
         pointer-events: none;
         background: repeating-conic-gradient(
             from 0deg,
@@ -109,7 +111,7 @@ st.markdown("""
         animation: sunSpin 60s linear infinite;
         z-index: 0;
     }
-    @keyframes sunSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes sunSpin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 </style>
 """, unsafe_allow_html=True)
 
