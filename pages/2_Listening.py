@@ -8,8 +8,8 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
 
 st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="centered")
 
-# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
-st_autorefresh(interval=1500, key="mqtt_refresh_listening")
+# Refresco para MQTT
+st_autorefresh(interval=1000, key="mqtt_refresh_listening")
 
 inicializar_sesion()
 
@@ -24,6 +24,7 @@ st.markdown("""
 
 st.title("🎧 Escucha y Escribe")
 
+# Detectar botón de Wokwi
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "palabra_audio" in st.session_state:
