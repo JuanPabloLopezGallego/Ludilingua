@@ -38,7 +38,7 @@ def get_mqtt():
         client = mqtt.Client(client_id=client_id)
 
     client.on_connect = on_connect
-    client.on_disconnect = on_disconnect          # NUEVO
+    client.on_disconnect = on_disconnect
     client.on_message = on_message
     client.reconnect_delay_set(min_delay=1, max_delay=10)
     client.connect_async(BROKER, PORT, 60)
