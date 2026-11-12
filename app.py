@@ -97,7 +97,8 @@ st.markdown("""
 # ---------- HERO ----------
 st.markdown('<div class="hero-badge">🌍✨🎓</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="hero-title">English Play & Learn</h1>', unsafe_allow_html=True)
-st.markdown('<p class="hero-sub">🌈 ¡Aprende inglés jugando con Wokwi! 🎮</p>', unsafe_allow_html=True)
+# 🔧 CAMBIO: quitamos "con Wokwi" del subtítulo
+st.markdown('<p class="hero-sub">🌈 ¡Aprende inglés jugando! 🎮</p>', unsafe_allow_html=True)
 
 mostrar_puntaje()
 
