@@ -2,100 +2,85 @@ import streamlit as st
 from gtts import gTTS
 from io import BytesIO
 from streamlit_autorefresh import st_autorefresh
-import random
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
-                   publicar_feedback, reproducir_feedback, boton_avanzar_presionado)
+                   publicar_feedback, reiniciar_ronda, reintentar,
+                   hubo_avance_boton, normalizar)
+
+P = "listening"
+PALABRAS = ["cat", "dog", "house", "car", "tree", "sun"]
 
 st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="centered")
-st_autorefresh(interval=3000, key="mqtt_refresh_listening")
+st_autorefresh(interval=1000, key="refresh_listening")
 inicializar_sesion()
 
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
     h1, h2, h3, p { color: #0a2e5c !important; }
-    .audio-icon { text-align: center; font-size: 80px; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .audio-icon { text-align: center; font-size: 80px; animation: pulse 2s infinite; }
 </style>
 """, unsafe_allow_html=True)
 
+
+@st.cache_data
+def audio_palabra(palabra: str) -> bytes:
+    buffer = BytesIO()
+    gTTS(text=palabra, lang="en").write_to_fp(buffer)
+    return buffer.getvalue()
+
+
 st.title("🎧 Escucha y Escribe")
 
-@st.cache_data(show_spinner=False)
-def obtener_audio(palabra: str):
-    try:
-        tts = gTTS(text=palabra, lang='en')
-        buf = BytesIO()
-        tts.write_to_fp(buf)
-        buf.seek(0)
-        return buf.read()
-    except Exception as e:
-        print(f"Error gTTS: {e}")
-        return None
+if hubo_avance_boton(P):
+    reiniciar_ronda(P, PALABRAS)
+    st.toast("🔘 Botón de Wokwi: siguiente palabra")
 
-def nueva_palabra_listening():
-    actual = st.session_state.palabra_audio
-    opciones = [p for p in palabras_audio if p != actual]
-    st.session_state.palabra_audio = random.choice(opciones)
-    st.session_state.listening_round += 1
-    st.session_state.listening_estado = "esperando"
-    st.session_state.listening_mensaje = ""
+if f"{P}_actual" not in st.session_state:
+    reiniciar_ronda(P, PALABRAS)
 
-palabras_audio = ["cat", "dog", "house", "car", "tree", "sun"]
-if "palabra_audio" not in st.session_state:
-    st.session_state.palabra_audio = random.choice(palabras_audio)
-if "listening_round" not in st.session_state:
-    st.session_state.listening_round = 0
-if "listening_estado" not in st.session_state:
-    st.session_state.listening_estado = "esperando"
-    st.session_state.listening_mensaje = ""
-
-if boton_avanzar_presionado():
-    nueva_palabra_listening()
-    st.toast("🔘 ¡Botón físico! Siguiente palabra.", icon="⏭️")
-    st.rerun()
-
-palabra = st.session_state.palabra_audio
+palabra = st.session_state[f"{P}_actual"]
+ronda = st.session_state[f"{P}_ronda"]
+intento = st.session_state[f"{P}_intento"]
+respondido = st.session_state[f"{P}_respondido"]
 
 st.markdown("<div class='audio-icon'>🔊</div>", unsafe_allow_html=True)
 st.markdown("### Escucha la palabra y escríbela:")
-
-audio_data = obtener_audio(palabra)
-if audio_data:
-    st.audio(audio_data, format="audio/mp3")
-else:
-    st.warning("No se pudo generar el audio. Revisa tu internet. La palabra es para debug: " + palabra)
-
-st.info("💡 Puedes presionar el botón físico de Wokwi en cualquier momento para saltar.")
+st.audio(audio_palabra(palabra), format="audio/mp3")
 mostrar_puntaje()
 
-respuesta = st.text_input("Escribe la palabra que escuchaste:", key=f"input_listening_{st.session_state.listening_round}")
+respuesta = st.text_input(
+    "Escribe la palabra que escuchaste:",
+    key=f"{P}_input_{ronda}_{intento}",
+    disabled=respondido,
+)
 
-c1, c2 = st.columns(2)
-with c1:
-    btn_check = st.button("Comprobar ✅", use_container_width=True)
-with c2:
-    btn_skip = st.button("Saltar ⏭️", use_container_width=True)
+if not respondido:
+    if st.button("✅ Comprobar", key=f"{P}_btn_{ronda}_{intento}"):
+        if respuesta.strip():
+            acierto = normalizar(respuesta) == normalizar(palabra)
+            mensaje = actualizar_puntaje(acierto)
+            publicar_feedback(acierto)
+            st.session_state[f"{P}_respondido"] = True
+            st.session_state[f"{P}_resultado"] = {
+                "acierto": acierto, "mensaje": mensaje, "dijo": respuesta.strip()
+            }
+            st.rerun()
+        else:
+            st.warning("Por favor, escribe una palabra.")
 
-if btn_skip:
-    nueva_palabra_listening()
-    st.rerun()
-
-if btn_check:
-    if not respuesta:
-        st.warning("Por favor, escribe una palabra.")
+resultado = st.session_state[f"{P}_resultado"]
+if respondido and resultado:
+    st.write(f"Escribiste: **{resultado['dijo']}**")
+    if resultado["acierto"]:
+        st.success(resultado["mensaje"])
     else:
-        acierto = respuesta.lower().strip() == palabra.lower()
-        mensaje = actualizar_puntaje(acierto)
-        publicar_feedback(acierto)
-        reproducir_feedback(acierto)
-        st.session_state.listening_estado = "correcto" if acierto else "incorrecto"
-        st.session_state.listening_mensaje = mensaje
+        st.error(resultado["mensaje"])
+        st.write(f"La palabra correcta era: **{palabra}**")
+        if st.button("🔁 Intentar de nuevo"):
+            reintentar(P)
+            st.rerun()
 
-# Mostrar estado persistente (no se borra con autorefresh)
-if st.session_state.listening_estado == "correcto":
-    st.success(st.session_state.listening_mensaje + " LED verde en Wokwi 🟢")
-    if st.button("Siguiente palabra ➡️"):
-        nueva_palabra_listening()
+    if st.button("➡️ Siguiente palabra"):
+        reiniciar_ronda(P, PALABRAS)
         st.rerun()
-elif st.session_state.listening_estado == "incorrecto":
-    st.error(st.session_state.listening_mensaje + f" Era: **{palabra}** LED rojo en Wokwi 🔴")
