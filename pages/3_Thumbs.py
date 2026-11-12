@@ -9,25 +9,17 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
 inicializar_sesion()
 
-# --- Animaciones y Estilos ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
     h1, h2, h3, p { color: #4a1c40 !important; }
-    @keyframes shake {
-        0% { transform: rotate(0deg); }
-        25% { transform: rotate(-10deg); }
-        50% { transform: rotate(10deg); }
-        75% { transform: rotate(-10deg); }
-        100% { transform: rotate(0deg); }
-    }
+    @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(0deg); } }
     .emoji-header { text-align: center; font-size: 80px; animation: shake 1s ease-in-out infinite; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("👍 Pulgar Arriba / Abajo")
 
-# --- Cargar modelo ---
 @st.cache_resource
 def cargar_modelo():
     try:
@@ -102,7 +94,7 @@ if img_file is not None:
     acierto = (usuario_dice_correcto == preg["correcta"])
     mensaje = actualizar_puntaje(acierto)
     
-    # --- Publicar en MQTT para que Wokwi reaccione (LEDs y Buzzer) ---
+    # Publicar en MQTT para que Wokwi reaccione
     publicar_feedback(acierto)
 
     if acierto:
