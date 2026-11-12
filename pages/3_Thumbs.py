@@ -5,8 +5,7 @@ import os
 from PIL import Image, ImageOps
 from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
-                   publicar_feedback, reiniciar_ronda, reintentar,
-                   hubo_avance_boton)
+                   publicar_feedback, reiniciar_ronda, hubo_avance_boton)
 
 P = "thumbs"
 PREGUNTAS = [
@@ -112,7 +111,6 @@ intento = st.session_state[f"{P}_intento"]
 respondido = st.session_state[f"{P}_respondido"]
 
 st.markdown("<div class='emoji-header'>👍 / 👎</div>", unsafe_allow_html=True)
-# --- FRASE CAMBIADA AQUÍ ---
 st.markdown(f"### ¿La traducción en inglés de **{preg['espanol']}** es **{preg['ingles']}**?")
 st.markdown("Muestra **pulgar arriba 👍** si es correcto, o **pulgar abajo 👎** si es incorrecto.")
 st.info("💡 Puedes presionar el botón físico de Wokwi en cualquier momento para saltar.")
@@ -175,12 +173,5 @@ if respondido and resultado:
     else:
         st.error(resultado["mensaje"] + " LED rojo en Wokwi 🔴")
 
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("🔁 Intentar de nuevo"):
-            reintentar(P)
-            st.rerun()
-    with c2:
-        if st.button("➡️ Siguiente pregunta"):
-            reiniciar_ronda(P, PREGUNTAS)
-            st.rerun()
+    # Aviso para usar el botón físico
+    st.info("💡 **Instrucción:** Presiona el botón físico en Wokwi para pasar a la siguiente pregunta.")
