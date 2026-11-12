@@ -1,0 +1,7 @@
+streamlit==1.32.0
+streamlit-mic-recorder==0.0.5
+streamlit-lottie==0.0.5
+tensorflow-cpu==2.15.0
+pillow==10.2.0
+numpy==1.26.4
+gTTS==2.5.1
