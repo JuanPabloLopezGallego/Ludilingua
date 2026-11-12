@@ -1,10 +1,15 @@
 import streamlit as st
 from streamlit_mic_recorder import speech_to_text
+from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje, 
                    publicar_feedback, obtener_ultimo_mensaje_boton)
 import random
 
 st.set_page_config(page_title="Speaking Practice", page_icon="🎤", layout="centered")
+
+# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
+st_autorefresh(interval=1500, key="mqtt_refresh_speaking")
+
 inicializar_sesion()
 
 st.markdown("""
@@ -18,7 +23,6 @@ st.markdown("""
 
 st.title("🎤 Práctica de Pronunciación")
 
-# --- Lógica para detectar el botón físico de Wokwi ---
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "palabra_actual" in st.session_state:
@@ -41,8 +45,6 @@ if texto_reconocido:
     st.write(f"Has dicho: **{texto_reconocido}**")
     acierto = texto_reconocido.lower().strip() == palabra.lower()
     mensaje = actualizar_puntaje(acierto)
-    
-    # Publicar en MQTT para que Wokwi reaccione (LEDs y Buzzer)
     publicar_feedback(acierto)
     
     if acierto:
