@@ -8,16 +8,11 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
 st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="centered")
 inicializar_sesion()
 
-# --- Animaciones y Estilos ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
     h1, h2, h3, p { color: #0a2e5c !important; }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     .audio-icon { text-align: center; font-size: 80px; animation: pulse 2s infinite; }
 </style>
 """, unsafe_allow_html=True)
@@ -27,7 +22,6 @@ st.title("🎧 Escucha y Escribe")
 # --- Lógica para detectar el botón físico de Wokwi ---
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
-    # Si el botón fue presionado, borramos la palabra actual para que se genere una nueva
     if "palabra_audio" in st.session_state:
         del st.session_state.palabra_audio
     st.toast("🔘 ¡Botón de Wokwi presionado! Siguiente palabra.")
@@ -57,7 +51,7 @@ if st.button("Comprobar ✅"):
         acierto = respuesta.lower().strip() == palabra.lower()
         mensaje = actualizar_puntaje(acierto)
         
-        # --- Publicar en MQTT para que Wokwi reaccione (LEDs y Buzzer) ---
+        # Publicar en MQTT para que Wokwi reaccione
         publicar_feedback(acierto)
         
         if acierto:
