@@ -9,8 +9,8 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
 
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
 
-# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
-st_autorefresh(interval=1500, key="mqtt_refresh_thumbs")
+# Refresco para MQTT
+st_autorefresh(interval=1000, key="mqtt_refresh_thumbs")
 
 inicializar_sesion()
 
@@ -41,6 +41,7 @@ if model is None:
     st.error("⚠️ Error al cargar el modelo. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en la carpeta assets/.")
     st.stop()
 
+# Detectar botón de Wokwi
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "pregunta_actual" in st.session_state:
