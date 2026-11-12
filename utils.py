@@ -2,7 +2,6 @@ import streamlit as st
 import paho.mqtt.client as mqtt
 import threading
 import queue
-import random
 import numpy as np
 from io import BytesIO
 import wave
@@ -13,7 +12,6 @@ PORT = 1883
 TOPIC_BOTON = "ludilingua_pro_2026/boton"
 TOPIC_FEEDBACK = "ludilingua_pro_2026/feedback"
 
-# Cola GLOBAL (segura para hilos)
 mqtt_queue = queue.Queue()
 
 def on_connect(client, userdata, flags, rc):
@@ -26,12 +24,13 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     payload = msg.payload.decode()
-    print(f"Mensaje MQTT recibido en {msg.topic}: {payload}")
+    print(f"DEBUG: Mensaje MQTT recibido en {msg.topic}: {payload}")
     mqtt_queue.put((msg.topic, payload))
 
 @st.cache_resource
 def get_mqtt_client():
-    client_id = f"StreamlitLudi_{random.randint(0, 99999)}"
+    # Client ID FIJO para mantener la sesión y la suscripción vivas
+    client_id = "StreamlitLudiLingua_001"
     client = mqtt.Client(client_id=client_id)
     client.on_connect = on_connect
     client.on_message = on_message
@@ -45,20 +44,21 @@ mqtt_client = get_mqtt_client()
 def publicar_feedback(acierto: bool):
     mensaje = "CORRECTO" if acierto else "INCORRECTO"
     mqtt_client.publish(TOPIC_FEEDBACK, mensaje)
+    print(f"DEBUG: Publicado feedback en {TOPIC_FEEDBACK}: {mensaje}")
 
 def obtener_ultimo_mensaje_boton():
     try:
         ultimo = None
         while not mqtt_queue.empty():
             topic, payload = mqtt_queue.get_nowait()
-            print(f"DEBUG: Mensaje en cola -> {topic}: {payload}")
+            print(f"DEBUG: Procesando mensaje de {topic}: {payload}")
             if topic == TOPIC_BOTON:
                 ultimo = payload
         return ultimo
     except queue.Empty:
         return None
 
-# --- Funciones de Puntaje ---
+# --- Funciones de Puntaje y Sonido (sin cambios) ---
 def inicializar_sesion():
     if "score" not in st.session_state:
         st.session_state.score = 0
