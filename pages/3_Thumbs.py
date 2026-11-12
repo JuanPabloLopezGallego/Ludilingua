@@ -10,32 +10,37 @@ inicializar_sesion()
 
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    .stApp { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    h1, h2, h3, p { color: #4a1c40 !important; }
+    @keyframes shake {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-10deg); }
+        50% { transform: rotate(10deg); }
+        75% { transform: rotate(-10deg); }
+        100% { transform: rotate(0deg); }
     }
-    h1, h2, p {
-        color: #4a1c40 !important;
-    }
+    .emoji-header { text-align: center; font-size: 80px; animation: shake 1s ease-in-out infinite; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("👍 Pulgar Arriba / Abajo")
 
-# --- Cargar modelo de Teachable Machine ---
 @st.cache_resource
 def cargar_modelo():
-    model = tf.keras.models.load_model("assets/thumbs_up.h5")
-    with open("assets/labels.txt", "r") as f:
-        labels = [line.strip() for line in f.readlines()]
-    return model, labels
+    try:
+        model = tf.keras.models.load_model("assets/thumbs_up.h5")
+        with open("assets/labels.txt", "r") as f:
+            labels = [line.strip() for line in f.readlines()]
+        return model, labels
+    except Exception as e:
+        return None, None
 
-try:
-    model, labels = cargar_modelo()
-except Exception as e:
-    st.error(f"Error al cargar el modelo: {e}. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en la carpeta assets/.")
+model, labels = cargar_modelo()
+
+if model is None:
+    st.error("⚠️ Error al cargar el modelo. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en la carpeta assets/.")
     st.stop()
 
-# --- Preguntas de ejemplo ---
 preguntas = [
     {"espanol": "vaca", "ingles": "cow", "correcta": True},
     {"espanol": "perro", "ingles": "cat", "correcta": False},
@@ -47,12 +52,13 @@ if "pregunta_actual" not in st.session_state:
     st.session_state.pregunta_actual = random.choice(preguntas)
 
 preg = st.session_state.pregunta_actual
+
+st.markdown("<div class='emoji-header'>👍 / 👎</div>", unsafe_allow_html=True)
 st.markdown(f"### ¿La traducción de **{preg['espanol']}** es **{preg['ingles']}**?")
 st.markdown("Muestra **pulgar arriba 👍** si es correcto, o **pulgar abajo 👎** si es incorrecto.")
 
 mostrar_puntaje()
 
-# --- Captura de cámara ---
 img_file = st.camera_input("Muestra tu pulgar a la cámara")
 
 def preprocesar_imagen(img: Image.Image) -> np.ndarray:
@@ -75,7 +81,6 @@ if img_file is not None:
 
     st.write(f"Predicción: **{clase}** (confianza: {confianza:.2f})")
 
-    # Mapeo: asumimos que labels.txt contiene "Thumbs Up" y "Thumbs Down"
     if "up" in clase.lower() or "arriba" in clase.lower():
         usuario_dice_correcto = True
     elif "down" in clase.lower() or "abajo" in clase.lower():
