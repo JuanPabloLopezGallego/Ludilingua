@@ -7,7 +7,15 @@ from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
                    hubo_avance_boton, normalizar)
 
 P = "listening"
-PALABRAS = ["cat", "dog", "house", "car", "tree", "sun"]
+PALABRAS = [
+    "cat", "dog", "house", "car", "tree", "sun", "moon", "star", 
+    "book", "table", "chair", "water", "fire", "earth", "wind", 
+    "apple", "banana", "orange", "grape", "strawberry", "elephant", 
+    "lion", "tiger", "monkey", "giraffe", "zebra", "computer", 
+    "phone", "television", "radio", "music", "guitar", "piano", 
+    "drum", "violin", "flute", "school", "teacher", "student", 
+    "doctor", "nurse", "police", "engineer", "pilot", "chef"
+]
 
 st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="centered")
 st_autorefresh(interval=1000, key="refresh_listening")
