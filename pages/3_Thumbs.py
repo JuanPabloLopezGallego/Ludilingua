@@ -3,11 +3,13 @@ import tensorflow as tf
 from PIL import Image, ImageOps
 import numpy as np
 import random
-from utils import inicializar_sesion, actualizar_puntaje, mostrar_puntaje, reproducir_feedback
+from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje, 
+                   publicar_feedback, obtener_ultimo_mensaje_boton)
 
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
 inicializar_sesion()
 
+# --- Animaciones y Estilos ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
@@ -25,6 +27,7 @@ st.markdown("""
 
 st.title("👍 Pulgar Arriba / Abajo")
 
+# --- Cargar modelo ---
 @st.cache_resource
 def cargar_modelo():
     try:
@@ -40,6 +43,13 @@ model, labels = cargar_modelo()
 if model is None:
     st.error("⚠️ Error al cargar el modelo. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en la carpeta assets/.")
     st.stop()
+
+# --- Lógica para detectar el botón físico de Wokwi ---
+mensaje_boton = obtener_ultimo_mensaje_boton()
+if mensaje_boton == "AVANZAR":
+    if "pregunta_actual" in st.session_state:
+        del st.session_state.pregunta_actual
+    st.toast("🔘 ¡Botón de Wokwi presionado! Siguiente pregunta.")
 
 preguntas = [
     {"espanol": "vaca", "ingles": "cow", "correcta": True},
@@ -91,7 +101,9 @@ if img_file is not None:
 
     acierto = (usuario_dice_correcto == preg["correcta"])
     mensaje = actualizar_puntaje(acierto)
-    reproducir_feedback(acierto)
+    
+    # --- Publicar en MQTT para que Wokwi reaccione (LEDs y Buzzer) ---
+    publicar_feedback(acierto)
 
     if acierto:
         st.success(mensaje)
