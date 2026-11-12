@@ -133,7 +133,7 @@ def inject_global_css():
             box-shadow: 0 0 0 4px rgba(255,209,102,0.35) !important;
         }
 
-        /* ---------- Reproductor de audio nativo corregido ---------- */
+        /* ---------- Reproductor de audio nativo ---------- */
         [data-testid="stAudio"] {
             background: #ffffff !important;
             border-radius: 20px !important;
@@ -145,7 +145,7 @@ def inject_global_css():
         }
         [data-testid="stAudio"] audio {
             width: 100%;
-            color-scheme: light !important; /* Fuerza modo claro para que los iconos se vean oscuros */
+            color-scheme: light !important;
             border-radius: 10px;
         }
 
@@ -186,6 +186,7 @@ def animated_bg(c1, c2, c3, speed=15):
 
 
 def floating_emojis(emojis):
+    """Emojis flotantes repartidos por toda la pantalla de forma simétrica."""
     spans = "".join(f'<span class="float-emoji">{e}</span>' for e in emojis)
     st.markdown(f"""
     <style>
@@ -196,16 +197,17 @@ def floating_emojis(emojis):
             pointer-events: none; z-index: 0; overflow: hidden;
         }}
         .float-emoji {{
-            position: absolute; font-size: 3rem; opacity: 0.4;
+            position: absolute; font-size: 3rem; opacity: 0.35;
             animation: emojiBounce 1s ease-in-out infinite;
             will-change: transform;
         }}
-        .float-emoji:nth-child(1) {{ top: 8%;  left: 4%; }}
-        .float-emoji:nth-child(2) {{ top: 18%; right: 7%; }}
-        .float-emoji:nth-child(3) {{ bottom: 14%; left: 10%; }}
-        .float-emoji:nth-child(4) {{ bottom: 22%; right: 12%; }}
-        .float-emoji:nth-child(5) {{ top: 48%; left: 3%; }}
-        .float-emoji:nth-child(6) {{ top: 62%; right: 4%; }}
+        /* Posiciones simétricas para que cubran todo el fondo */
+        .float-emoji:nth-child(1) {{ top: 10%;  left: 8%; }}
+        .float-emoji:nth-child(2) {{ top: 15%; right: 8%; }}
+        .float-emoji:nth-child(3) {{ bottom: 15%; left: 10%; }}
+        .float-emoji:nth-child(4) {{ bottom: 20%; right: 10%; }}
+        .float-emoji:nth-child(5) {{ top: 45%; left: 4%; }}
+        .float-emoji:nth-child(6) {{ top: 55%; right: 4%; }}
         @keyframes emojiBounce {{
             0%, 100% {{ transform: translateY(0) rotate(0deg) scale(1); }}
             50%      {{ transform: translateY(-18px) rotate(8deg) scale(1.15); }}
