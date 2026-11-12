@@ -9,30 +9,31 @@ inicializar_sesion()
 
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    .stApp { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    h1, h2, h3, p { color: #0a2e5c !important; }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
     }
-    h1, h2, p {
-        color: #0a2e5c !important;
-    }
+    .audio-icon { text-align: center; font-size: 80px; animation: pulse 2s infinite; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🎧 Escucha y Escribe")
 
-# Lista de palabras con audio
 palabras_audio = ["cat", "dog", "house", "car", "tree", "sun"]
 if "palabra_audio" not in st.session_state:
     st.session_state.palabra_audio = random.choice(palabras_audio)
 
 palabra = st.session_state.palabra_audio
 
-# Generar audio con gTTS
 tts = gTTS(text=palabra, lang='en')
 audio_bytes = BytesIO()
 tts.write_to_fp(audio_bytes)
 audio_bytes.seek(0)
 
+st.markdown("<div class='audio-icon'>🔊</div>", unsafe_allow_html=True)
 st.markdown("### Escucha la palabra y escríbela:")
 st.audio(audio_bytes, format="audio/mp3")
 
