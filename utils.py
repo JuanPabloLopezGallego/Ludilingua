@@ -1,6 +1,8 @@
 import random
 import threading
 import uuid
+import base64
+from io import BytesIO
 
 import paho.mqtt.client as mqtt
 import streamlit as st
@@ -97,11 +99,7 @@ def inject_global_css():
             50%      { transform: translateY(-5px); }
         }
 
-        /* =================================================================
-           🔧 LABELS de widgets (text_input, camera_input, etc.)
-           FIX: en dark mode Streamlit los pinta blancos → invisibles.
-           Forzamos un color oscuro con halo blanco → legible en cualquier fondo.
-           ================================================================= */
+        /* ---------- Labels de widgets ---------- */
         [data-testid="stWidgetLabel"] p,
         [data-testid="stWidgetLabel"] label,
         .stTextInput > label,
@@ -131,45 +129,13 @@ def inject_global_css():
             color: #1a1a2e !important;
             background: #ffffff !important;
         }
-        .stTextInput > div > div > input::placeholder {
-            color: #9aa0b4 !important;
-        }
+        .stTextInput > div > div > input::placeholder { color: #9aa0b4 !important; }
         .stTextInput > div > div > input:focus {
             border-color: #ffd166 !important;
             box-shadow: 0 0 0 4px rgba(255,209,102,0.35) !important;
         }
 
-        /* =================================================================
-           🔧 REPRODUCTOR DE AUDIO
-           FIX: en dark mode los iconos y la barra son blancos → invisibles
-           sobre el marco blanco. Forzamos color-scheme light + fondo claro
-           para que los controles nativos se rendericen con iconos oscuros.
-           ================================================================= */
-        [data-testid="stAudio"] {
-            background: #ffffff !important;
-            border: 5px solid #ffffff;
-            border-radius: 26px;
-            padding: 0.8rem;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-            margin: 1rem 0;
-        }
-        [data-testid="stAudio"] audio {
-            width: 100%;
-            color-scheme: light !important;
-            background: #f8f9fa !important;
-            border-radius: 16px;
-        }
-        [data-testid="stAudio"] audio::-webkit-media-controls-panel {
-            background: #f8f9fa !important;
-        }
-        [data-testid="stAudio"] audio::-webkit-media-controls-play-button,
-        [data-testid="stAudio"] audio::-webkit-media-controls-current-time-display,
-        [data-testid="stAudio"] audio::-webkit-media-controls-time-remaining-display {
-            color: #1a1a2e !important;
-            filter: none !important;
-        }
-
-        /* ---------- Cámara con marco bonito ---------- */
+        /* ---------- Cámara ---------- */
         [data-testid="stCameraInput"] {
             border: 5px solid #fff;
             border-radius: 26px;
@@ -188,8 +154,21 @@ def inject_global_css():
     """, unsafe_allow_html=True)
 
 
+def custom_audio_player(audio_bytes):
+    """Reproductor de audio HTML5 personalizado (evita el bug visual de Streamlit)."""
+    b64 = base64.b64encode(audio_bytes).decode()
+    st.markdown(f"""
+    <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+        <div style="background: white; padding: 8px 16px; border-radius: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; width: 100%; max-width: 450px; border: 3px solid #fff;">
+            <audio controls style="width: 100%; outline: none; border-radius: 20px;">
+                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def animated_bg(c1, c2, c3, speed=15):
-    """Fondo con gradiente animado (se mueve solo)."""
     st.markdown(f"""
     <style>
         .stApp {{
@@ -207,31 +186,17 @@ def animated_bg(c1, c2, c3, speed=15):
 
 
 def floating_emojis(emojis):
-    """
-    Emojis decorativos en el fondo, con animación CSS.
-    🔧 FIX: la animación dura 1s (= intervalo de st_autorefresh) y
-    regresa a la misma posición inicial, así no se nota el reinicio
-    cuando Streamlit vuelve a renderizar el markdown.
-    """
     spans = "".join(f'<span class="float-emoji">{e}</span>' for e in emojis)
     st.markdown(f"""
     <style>
         .emoji-cloud {{
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            pointer-events: none; z-index: 0; overflow: hidden;
         }}
         .float-emoji {{
-            position: absolute;
-            font-size: 3rem;
-            opacity: 0.4;
-            /* Animación de 1s → coincide con el ciclo de st_autorefresh(1000ms).
-               Los keyframes vuelven al mismo punto → reinicio invisible. */
+            position: absolute; font-size: 3rem; opacity: 0.4;
             animation: emojiBounce 1s ease-in-out infinite;
             will-change: transform;
         }}
@@ -251,7 +216,6 @@ def floating_emojis(emojis):
 
 
 def kid_alert(kind, message):
-    """Alerta estilizada: kind ∈ {success, error, info, warn}"""
     icons = {"success": "🎉", "error": "😅", "info": "💡", "warn": "⚠️"}
     st.markdown(f"""
     <div class="kid-alert kid-{kind}">
@@ -262,7 +226,6 @@ def kid_alert(kind, message):
 
 
 def wokwi_hint(text="Presiona el botón de Wokwi para continuar"):
-    """Cartel recordatorio del botón físico."""
     st.markdown(f"""
     <div style="text-align:center;">
         <div class="wokwi-banner"><span class="w-icon">🔘</span><span>{text}</span></div>
@@ -271,22 +234,20 @@ def wokwi_hint(text="Presiona el botón de Wokwi para continuar"):
 
 
 # =====================================================================
-#  📡 MQTT
+#  📡 MQTT & LÓGICA
 # =====================================================================
 @st.cache_resource
 def get_mqtt():
     estado = {"avances": 0, "lock": threading.Lock()}
 
     def on_connect(client, userdata, flags, rc, *args):
-        print(f"MQTT conectado rc={rc}. Suscribiendo a {TOPIC_BOTON}")
         client.subscribe(TOPIC_BOTON)
 
     def on_disconnect(client, userdata, rc, *args):
-        print(f"MQTT DESCONECTADO rc={rc}")
+        pass
 
     def on_message(client, userdata, msg):
         payload = msg.payload.decode(errors="ignore").strip()
-        print(f"DEBUG MQTT: {msg.topic} -> {payload}")
         if msg.topic == TOPIC_BOTON and "AVANZAR" in payload:
             with estado["lock"]:
                 estado["avances"] += 1
@@ -333,16 +294,12 @@ def hubo_avance_boton(prefijo: str) -> bool:
     return False
 
 
-# =====================================================================
-#  🔁 RONDAS Y PUNTAJE
-# =====================================================================
 def reiniciar_ronda(prefijo: str, opciones: list):
     st.session_state[f"{prefijo}_actual"] = random.choice(opciones)
     st.session_state[f"{prefijo}_ronda"] = st.session_state.get(f"{prefijo}_ronda", 0) + 1
     st.session_state[f"{prefijo}_intento"] = 0
     st.session_state[f"{prefijo}_respondido"] = False
     st.session_state[f"{prefijo}_resultado"] = None
-    st.session_state[f"{prefijo}_celebrado"] = False
     publicar_limpiar()
 
 
@@ -350,7 +307,6 @@ def reintentar(prefijo: str):
     st.session_state[f"{prefijo}_intento"] += 1
     st.session_state[f"{prefijo}_respondido"] = False
     st.session_state[f"{prefijo}_resultado"] = None
-    st.session_state[f"{prefijo}_celebrado"] = False
     publicar_limpiar()
 
 
@@ -372,7 +328,6 @@ def actualizar_puntaje(acierto: bool):
 
 
 def mostrar_puntaje():
-    """Tarjeta de puntos llamativa con animación."""
     score = st.session_state.get("score", 0)
     st.markdown(f"""
     <div style="text-align:center;">
@@ -387,43 +342,16 @@ def mostrar_puntaje():
     </div>
     <style>
         .score-card {{
-            display: inline-flex;
-            align-items: center;
-            gap: 1.2rem;
+            display: inline-flex; align-items: center; gap: 1.2rem;
             background: linear-gradient(135deg, #fffbe6 0%, #ffe066 100%);
-            border: 4px solid #fff;
-            border-radius: 40px;
-            padding: 0.7rem 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin: 0.6rem auto 1.4rem;
+            border: 4px solid #fff; border-radius: 40px; padding: 0.7rem 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin: 0.6rem auto 1.4rem;
             animation: scoreBounce 2.2s ease-in-out infinite;
         }}
-        .s-label {{
-            font-size: 0.75rem;
-            letter-spacing: 3px;
-            color: #8a6d00;
-            font-weight: 700;
-            font-family: 'Baloo 2', sans-serif;
-        }}
-        .s-value {{
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: #4a3400;
-            line-height: 1;
-            font-family: 'Baloo 2', sans-serif;
-        }}
-        .s-emoji {{
-            font-size: 2rem;
-            animation: wiggleEmoji 1.4s ease-in-out infinite;
-        }}
-        @keyframes scoreBounce {{
-            0%, 100% {{ transform: translateY(0); }}
-            50%      {{ transform: translateY(-6px); }}
-        }}
-        @keyframes wiggleEmoji {{
-            0%, 100% {{ transform: rotate(0deg); }}
-            25%      {{ transform: rotate(-15deg); }}
-            75%      {{ transform: rotate(15deg); }}
-        }}
+        .s-label {{ font-size: 0.75rem; letter-spacing: 3px; color: #8a6d00; font-weight: 700; font-family: 'Baloo 2', sans-serif; }}
+        .s-value {{ font-size: 2.4rem; font-weight: 800; color: #4a3400; line-height: 1; font-family: 'Baloo 2', sans-serif; }}
+        .s-emoji {{ font-size: 2rem; animation: wiggleEmoji 1.4s ease-in-out infinite; }}
+        @keyframes scoreBounce {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-6px); }} }}
+        @keyframes wiggleEmoji {{ 0%, 100% {{ transform: rotate(0deg); }} 25% {{ transform: rotate(-15deg); }} 75% {{ transform: rotate(15deg); }} }}
     </style>
     """, unsafe_allow_html=True)
