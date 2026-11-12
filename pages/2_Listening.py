@@ -1,11 +1,16 @@
 import streamlit as st
 from gtts import gTTS
 from io import BytesIO
+from streamlit_autorefresh import st_autorefresh
 import random
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje, 
                    publicar_feedback, obtener_ultimo_mensaje_boton)
 
 st.set_page_config(page_title="Listening Practice", page_icon="🎧", layout="centered")
+
+# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
+st_autorefresh(interval=1500, key="mqtt_refresh_listening")
+
 inicializar_sesion()
 
 st.markdown("""
@@ -19,7 +24,6 @@ st.markdown("""
 
 st.title("🎧 Escucha y Escribe")
 
-# --- Lógica para detectar el botón físico de Wokwi ---
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "palabra_audio" in st.session_state:
@@ -32,7 +36,6 @@ if "palabra_audio" not in st.session_state:
 
 palabra = st.session_state.palabra_audio
 
-# Generar audio
 tts = gTTS(text=palabra, lang='en')
 audio_bytes = BytesIO()
 tts.write_to_fp(audio_bytes)
@@ -50,8 +53,6 @@ if st.button("Comprobar ✅"):
     if respuesta:
         acierto = respuesta.lower().strip() == palabra.lower()
         mensaje = actualizar_puntaje(acierto)
-        
-        # Publicar en MQTT para que Wokwi reaccione
         publicar_feedback(acierto)
         
         if acierto:
