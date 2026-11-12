@@ -5,7 +5,7 @@ from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
                    publicar_feedback, reiniciar_ronda, hubo_avance_boton,
                    normalizar, inject_global_css, animated_bg, floating_emojis,
-                   kid_alert, wokwi_hint)
+                   kid_alert, wokwi_hint, custom_audio_player)
 
 P = "listening"
 PALABRAS = [
@@ -27,44 +27,27 @@ inicializar_sesion()
 st.markdown("""
 <style>
     .listen-title {
-        text-align: center;
-        font-family: 'Baloo 2', sans-serif;
-        font-weight: 800;
-        font-size: clamp(1.8rem, 4.5vw, 3.2rem);
-        color: #fff;
+        text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 800;
+        font-size: clamp(1.8rem, 4.5vw, 3.2rem); color: #fff;
         text-shadow: 3px 3px 0 #0077cc, 6px 6px 22px rgba(0,0,0,0.35);
-        margin: 0.3rem 0 0.2rem;
-        animation: titleBob 2.5s ease-in-out infinite;
+        margin: 0.3rem 0 0.2rem; animation: titleBob 2.5s ease-in-out infinite;
     }
-    @keyframes titleBob {
-        0%, 100% { transform: translateY(0); }
-        50%      { transform: translateY(-6px); }
-    }
+    @keyframes titleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    
     .headphone-display {
-        text-align: center;
-        font-size: 5.5rem;
+        text-align: center; font-size: 5.5rem;
         animation: headBob 1.8s ease-in-out infinite;
-        filter: drop-shadow(0 0 22px rgba(79,172,254,0.9));
-        margin: 0.4rem 0;
+        filter: drop-shadow(0 0 22px rgba(79,172,254,0.9)); margin: 0.4rem 0;
     }
-    @keyframes headBob {
-        0%, 100% { transform: rotate(-8deg); }
-        50%      { transform: rotate(8deg); }
-    }
-    /* Visualizador de ondas */
+    @keyframes headBob { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+
     .waves-box {
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
-        gap: 6px;
-        height: 70px;
-        margin: 1rem 0;
+        display: flex; justify-content: center; align-items: flex-end;
+        gap: 6px; height: 70px; margin: 1rem 0;
     }
     .wave-bar {
-        width: 10px;
-        background: linear-gradient(180deg, #00f2fe, #4facfe);
-        border-radius: 6px;
-        animation: waveUpDown 1s ease-in-out infinite;
+        width: 10px; background: linear-gradient(180deg, #00f2fe, #4facfe);
+        border-radius: 6px; animation: waveUpDown 1s ease-in-out infinite;
         box-shadow: 0 4px 12px rgba(79,172,254,0.5);
     }
     .wave-bar:nth-child(1) { animation-delay: 0.0s; height: 30%; }
@@ -75,10 +58,7 @@ st.markdown("""
     .wave-bar:nth-child(6) { animation-delay: 0.5s; height: 80%; }
     .wave-bar:nth-child(7) { animation-delay: 0.6s; height: 55%; }
     .wave-bar:nth-child(8) { animation-delay: 0.7s; height: 35%; }
-    @keyframes waveUpDown {
-        0%, 100% { transform: scaleY(0.5); }
-        50%      { transform: scaleY(1); }
-    }
+    @keyframes waveUpDown { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +84,6 @@ ronda = st.session_state[f"{P}_ronda"]
 intento = st.session_state[f"{P}_intento"]
 respondido = st.session_state[f"{P}_respondido"]
 
-# ---------- ONDAS ----------
 st.markdown("""
 <div class="waves-box">
     <div class="wave-bar"></div><div class="wave-bar"></div>
@@ -114,7 +93,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.audio(audio_palabra(palabra), format="audio/mp3")
+# 🔧 AQUÍ usamos el nuevo reproductor personalizado
+custom_audio_player(audio_palabra(palabra))
+
 mostrar_puntaje()
 
 respuesta = st.text_input(
