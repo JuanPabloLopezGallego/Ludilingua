@@ -12,7 +12,7 @@ PORT = 1883
 TOPIC_BOTON = "ludilingua/boton"
 TOPIC_FEEDBACK = "ludilingua/feedback"
 
-# Cola GLOBAL (funciona perfectamente con hilos en segundo plano)
+# Cola GLOBAL (segura para hilos)
 mqtt_queue = queue.Queue()
 
 def on_connect(client, userdata, flags, rc):
@@ -25,7 +25,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     print(f"Mensaje MQTT recibido en {msg.topic}: {payload}")
-    mqtt_queue.put((msg.topic, payload)) # Guardamos en la cola global
+    mqtt_queue.put((msg.topic, payload))
 
 @st.cache_resource
 def get_mqtt_client():
@@ -54,7 +54,7 @@ def obtener_ultimo_mensaje_boton():
     except queue.Empty:
         return None
 
-# --- Funciones de Puntaje y Sonido ---
+# --- Funciones de Puntaje ---
 def inicializar_sesion():
     if "score" not in st.session_state:
         st.session_state.score = 0
@@ -93,7 +93,7 @@ def generar_sonido(frecuencia: int, duracion: float = 0.3) -> bytes:
 def reproducir_feedback(acierto: bool):
     if acierto:
         st.audio(generar_sonido(1000), format="audio/wav")
-        st.markdown("<div style='text-align:center; font-size: 30px; animation: fadeIn 1s;'>🟢 <b>¡LED Verde encendido!</b></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; font-size: 30px;'>🟢 <b>¡LED Verde encendido!</b></div>", unsafe_allow_html=True)
     else:
         st.audio(generar_sonido(300), format="audio/wav")
-        st.markdown("<div style='text-align:center; font-size: 30px; animation: fadeIn 1s;'>🔴 <b>¡LED Rojo encendido!</b></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; font-size: 30px;'>🔴 <b>¡LED Rojo encendido!</b></div>", unsafe_allow_html=True)
