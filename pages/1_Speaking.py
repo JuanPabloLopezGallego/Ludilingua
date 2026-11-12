@@ -2,8 +2,7 @@ import streamlit as st
 from streamlit_mic_recorder import speech_to_text
 from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje,
-                   publicar_feedback, reiniciar_ronda, reintentar,
-                   hubo_avance_boton, normalizar)
+                   publicar_feedback, reiniciar_ronda, hubo_avance_boton, normalizar)
 
 P = "speaking"
 PALABRAS = [
@@ -73,10 +72,6 @@ if resultado:
     else:
         st.error(resultado["mensaje"])
         st.write(f"La palabra correcta es: **{palabra}**")
-        if st.button("🔁 Intentar de nuevo"):
-            reintentar(P)
-            st.rerun()
-
-    if st.button("➡️ Siguiente palabra"):
-        reiniciar_ronda(P, PALABRAS)
-        st.rerun()
+    
+    # Aviso para usar el botón físico
+    st.info("💡 **Instrucción:** Presiona el botón físico en Wokwi para pasar a la siguiente palabra.")
