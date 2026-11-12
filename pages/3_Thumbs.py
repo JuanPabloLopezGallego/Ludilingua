@@ -3,10 +3,15 @@ import tensorflow as tf
 from PIL import Image, ImageOps
 import numpy as np
 import random
+from streamlit_autorefresh import st_autorefresh
 from utils import (inicializar_sesion, actualizar_puntaje, mostrar_puntaje, 
                    publicar_feedback, obtener_ultimo_mensaje_boton)
 
 st.set_page_config(page_title="Thumbs Up/Down", page_icon="👍", layout="centered")
+
+# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
+st_autorefresh(interval=1500, key="mqtt_refresh_thumbs")
+
 inicializar_sesion()
 
 st.markdown("""
@@ -36,7 +41,6 @@ if model is None:
     st.error("⚠️ Error al cargar el modelo. Asegúrate de tener 'thumbs_up.h5' y 'labels.txt' en la carpeta assets/.")
     st.stop()
 
-# --- Lógica para detectar el botón físico de Wokwi ---
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "pregunta_actual" in st.session_state:
@@ -93,8 +97,6 @@ if img_file is not None:
 
     acierto = (usuario_dice_correcto == preg["correcta"])
     mensaje = actualizar_puntaje(acierto)
-    
-    # Publicar en MQTT para que Wokwi reaccione
     publicar_feedback(acierto)
 
     if acierto:
