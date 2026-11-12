@@ -7,8 +7,8 @@ import random
 
 st.set_page_config(page_title="Speaking Practice", page_icon="🎤", layout="centered")
 
-# ESTA LÍNEA ES CLAVE PARA QUE EL BOTÓN DE WOKWI FUNCIONE
-st_autorefresh(interval=1500, key="mqtt_refresh_speaking")
+# Refresco para MQTT (permite que el botón de Wokwi avance en cualquier momento)
+st_autorefresh(interval=1000, key="mqtt_refresh_speaking")
 
 inicializar_sesion()
 
@@ -23,6 +23,7 @@ st.markdown("""
 
 st.title("🎤 Práctica de Pronunciación")
 
+# Detectar botón de Wokwi
 mensaje_boton = obtener_ultimo_mensaje_boton()
 if mensaje_boton == "AVANZAR":
     if "palabra_actual" in st.session_state:
@@ -39,7 +40,14 @@ st.markdown(f"<div class='word-display'>{palabra}</div>", unsafe_allow_html=True
 
 mostrar_puntaje()
 
-texto_reconocido = speech_to_text(language='en', start_prompt="🎙️ Grabar", stop_prompt="⏹️ Detener", just_once=True, use_container_width=True, key="speech")
+texto_reconocido = speech_to_text(
+    language='en',
+    start_prompt="🎙️ Grabar",
+    stop_prompt="⏹️ Detener",
+    just_once=True,
+    use_container_width=True,
+    key="speech"
+)
 
 if texto_reconocido:
     st.write(f"Has dicho: **{texto_reconocido}**")
