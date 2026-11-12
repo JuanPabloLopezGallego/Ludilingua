@@ -5,5 +5,5 @@ tensorflow-cpu==2.15.0
 pillow==10.2.0
 numpy==1.26.4
 gTTS==2.5.1
-protobuf==3.20.3
+protobuf==4.25.3
 paho-mqtt==1.6.1
