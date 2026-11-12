@@ -5,7 +5,7 @@ import uuid
 import paho.mqtt.client as mqtt
 import streamlit as st
 
-BROKER = "broker.hivemq.com"          # MISMO broker que el ESP32
+BROKER = "broker.hivemq.com"
 PORT = 1883
 TOPIC_BOTON = "ludilingua_pro_2026/boton"
 TOPIC_FEEDBACK = "ludilingua_pro_2026/feedback"
@@ -17,8 +17,11 @@ def get_mqtt():
     estado = {"avances": 0, "lock": threading.Lock()}
 
     def on_connect(client, userdata, flags, rc, *args):
-        print("MQTT conectado. Suscribiendo a", TOPIC_BOTON)
+        print(f"MQTT conectado rc={rc}. Suscribiendo a {TOPIC_BOTON}")
         client.subscribe(TOPIC_BOTON)
+
+    def on_disconnect(client, userdata, rc, *args):
+        print(f"MQTT DESCONECTADO rc={rc}")
 
     def on_message(client, userdata, msg):
         payload = msg.payload.decode(errors="ignore").strip()
@@ -26,16 +29,16 @@ def get_mqtt():
         if msg.topic == TOPIC_BOTON and "AVANZAR" in payload:
             with estado["lock"]:
                 estado["avances"] += 1
+                print(f"DEBUG MQTT: avances={estado['avances']}")
 
     client_id = f"streamlit_{uuid.uuid4().hex[:8]}"
     try:
-        # paho-mqtt 2.x
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
     except AttributeError:
-        # paho-mqtt 1.x
         client = mqtt.Client(client_id=client_id)
 
     client.on_connect = on_connect
+    client.on_disconnect = on_disconnect          # NUEVO
     client.on_message = on_message
     client.reconnect_delay_set(min_delay=1, max_delay=10)
     client.connect_async(BROKER, PORT, 60)
