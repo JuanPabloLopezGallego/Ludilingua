@@ -122,4 +122,74 @@ def preprocesar_imagen(img: Image.Image) -> np.ndarray:
 
 if hubo_avance_boton(P):
     reiniciar_ronda(P, PREGUNTAS)
-    st.toast("🔘 ¡Siguiente pregunta!", icon="
+    st.toast("🔘 ¡Siguiente pregunta!", icon="🎮")
+    st.rerun()
+
+if f"{P}_actual" not in st.session_state:
+    reiniciar_ronda(P, PREGUNTAS)
+
+model, err_or_labels = cargar_modelo()
+if model is None:
+    st.error(err_or_labels)
+    st.stop()
+labels = err_or_labels
+
+preg = st.session_state[f"{P}_actual"]
+ronda = st.session_state[f"{P}_ronda"]
+intento = st.session_state[f"{P}_intento"]
+respondido = st.session_state[f"{P}_respondido"]
+
+st.markdown(f"""
+<div class="question-card">
+    <h2>¿La traducción al inglés de <br>
+    <span class="big-word">"{preg['espanol']}"</span><br> es <br>
+    <span class="big-word">"{preg['ingles']}"</span>?</h2>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("<p style='text-align:center;color:#1a1a2e;font-weight:700;font-size:1.05rem;text-shadow:1px 1px 3px #fff;'>Muestra 👍 si es <b>correcto</b>, 👎 si es <b>incorrecto</b></p>", unsafe_allow_html=True)
+mostrar_puntaje()
+
+img_file = st.camera_input("📷 Muestra tu pulgar a la cámara", key=f"{P}_cam_{ronda}_{intento}")
+
+if img_file is not None:
+    image = Image.open(img_file).convert("RGB")
+    st.image(image, caption="Tu captura", use_container_width=True)
+
+    if not respondido:
+        data = preprocesar_imagen(image)
+        prediction = model.predict(data, verbose=0)
+        idx = int(np.argmax(prediction))
+        clase = labels[idx]
+        confianza = float(prediction[0][idx])
+        c = clase.lower()
+
+        if "incorrecto" in c or "down" in c or c.startswith("1"):
+            gesto = False
+        elif "correcto" in c or "up" in c or c.startswith("0"):
+            gesto = True
+        else:
+            gesto = None
+
+        if gesto is None:
+            resultado = {"acierto": None, "mensaje": f"Detecté '{clase}' ({confianza:.2f}). ¡Intenta mostrar el pulgar más claro!", "clase": clase, "conf": confianza}
+        else:
+            acierto = (gesto == preg["correcta"])
+            mensaje = actualizar_puntaje(acierto)
+            publicar_feedback(acierto)
+            resultado = {"acierto": acierto, "mensaje": mensaje, "clase": clase, "conf": confianza}
+            if acierto:
+                st.balloons()
+
+        st.session_state[f"{P}_resultado"] = resultado
+        st.session_state[f"{P}_respondido"] = True
+
+resultado = st.session_state[f"{P}_resultado"]
+if respondido and resultado:
+    if resultado["acierto"] is None:
+        kid_alert("warn", resultado["mensaje"])
+    elif resultado["acierto"]:
+        kid_alert("success", f"¡Genial! {resultado['mensaje']}")
+    else:
+        kid_alert("error", f"¡Ups! {resultado['mensaje']}")
+    wokwi_hint("Presiona el botón de Wokwi para la siguiente pregunta")
