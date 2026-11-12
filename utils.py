@@ -192,25 +192,32 @@ def floating_emojis(emojis):
     <style>
         .emoji-cloud {{
             position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
-            pointer-events: none; z-index: 0; overflow: hidden;
+            inset: 0 !important; /* 🔧 FIX: Ocupa exactamente el 100% visible, ignorando el scroll */
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }}
         .float-emoji {{
-            position: absolute; font-size: 3rem; opacity: 0.35;
-            animation: emojiBounce 1s ease-in-out infinite;
+            position: absolute;
+            font-size: 3.5rem;
+            opacity: 0.35;
+            animation: emojiBounce 1.5s ease-in-out infinite;
             will-change: transform;
         }}
-        /* Posiciones simétricas para que cubran todo el fondo */
-        .float-emoji:nth-child(1) {{ top: 10%;  left: 8%; }}
-        .float-emoji:nth-child(2) {{ top: 15%; right: 8%; }}
-        .float-emoji:nth-child(3) {{ bottom: 15%; left: 10%; }}
-        .float-emoji:nth-child(4) {{ bottom: 20%; right: 10%; }}
-        .float-emoji:nth-child(5) {{ top: 45%; left: 4%; }}
-        .float-emoji:nth-child(6) {{ top: 55%; right: 4%; }}
+        /* Distribución simétrica en los laterales y esquinas */
+        .float-emoji:nth-child(1) {{ top: 8%;  left: 4%; }}
+        .float-emoji:nth-child(2) {{ top: 15%; right: 4%; }}
+        .float-emoji:nth-child(3) {{ bottom: 15%; left: 6%; }}
+        .float-emoji:nth-child(4) {{ bottom: 10%; right: 6%; }}
+        .float-emoji:nth-child(5) {{ top: 45%; left: 2%; }}
+        .float-emoji:nth-child(6) {{ top: 55%; right: 2%; }}
+        /* Si agregas más de 6 emojis, estos van al centro */
+        .float-emoji:nth-child(7) {{ top: 30%; left: 50%; transform: translateX(-50%); }}
+        .float-emoji:nth-child(8) {{ bottom: 35%; left: 50%; transform: translateX(-50%); }}
+        
         @keyframes emojiBounce {{
             0%, 100% {{ transform: translateY(0) rotate(0deg) scale(1); }}
-            50%      {{ transform: translateY(-18px) rotate(8deg) scale(1.15); }}
+            50%      {{ transform: translateY(-20px) rotate(10deg) scale(1.1); }}
         }}
     </style>
     <div class="emoji-cloud">{spans}</div>
